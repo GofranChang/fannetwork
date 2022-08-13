@@ -1,0 +1,16 @@
+net_state = enum {
+    SUCCESS;
+    UNINITIALIZED;
+    MULTI_OPERATOR;
+    IO_OPERATOR_ERR;
+    ILLEGAL_PARAMS;
+    INTERNAL_ERR;
+    LICENSE_ERR;
+    MULTI_INIT;
+}
+
+tcp_server = interface +c {
+    static create():tcp_server;
+    init(port:i16):net_state;
+    start();
+}
