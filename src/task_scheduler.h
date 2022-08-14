@@ -1,13 +1,16 @@
 #pragma once
 
 #include <memory>
+#include <map>
+#include <vector>
+#include <string>
 #include "net_state.hpp"
 
 class ThreadPool;
 
-class EventHandler;
-
 namespace fannetwork {
+
+class EventHandler;
 
 using EventCb = std::function<void(int, short)>;
 
@@ -37,9 +40,9 @@ public:
   ~TaskScheduler() = default;
 
 public:
-  NetState init(size_t thread_nums);
+  NetState init(size_t thread_nums, const std::vector<std::string>& sub_reactor_name);
 
-  NetState regist_accept_socket(int fd, std::shared_ptr<EventHandler> handler);
+  NetState regist_accept_socket(int fd, const std::shared_ptr<EventHandler>& handler);
 
   void run();
 
@@ -49,9 +52,11 @@ private:
 private:
   std::shared_ptr<Reactor> main_reactor_;
 
-  std::shared_ptr<Reactor> connection_reactor_;
+  std::map<std::string, std::shared_ptr<Reactor>> sub_reactors_;
 
-  std::shared_ptr<Reactor> task_reactor_;
+  // std::shared_ptr<Reactor> connection_reactor_;
+
+  // std::shared_ptr<Reactor> task_reactor_;
 
   std::unique_ptr<ThreadPool> thread_pool_;
 };

@@ -4,17 +4,18 @@
 #include "net_state.hpp"
 #include "socket.h"
 #include "task_scheduler.h"
-#include "event_handler.h"
+#include "event_handler.hpp"
 
 namespace fannetwork {
 
 class TcpServerDefaultHandler : public EventHandler {
 public:
-  virtual void on_event(int fd, short event) override {}
+  virtual void on_event(int32_t fd, int16_t evt) override {
+    GLOGD("On connect {}", fd);
+  }
 
-  virtual void on_ioevent(int fd, const char* data, size_t len) override {}
-
-  virtual void on_error(int fd, short event) override {}
+  virtual void on_read(int32_t fd, const std::vector<uint8_t> & msg) override {
+  }
 };
 
 class TcpServerImpl : public TcpServer {
@@ -36,10 +37,8 @@ TcpServerImpl::TcpServerImpl(const std::shared_ptr<EventHandler>& handler) :
 }
 
 NetState TcpServerImpl::init(int16_t port, int32_t thread_num) {
-  INITLOGGER(spdlog::level::trace, "", true);
-
   auto scheduler = TaskScheduler::instance();
-  scheduler->init(thread_num);
+  scheduler->init(thread_num, {});
 
   if (accept_socket_) {
     GLOGE("Init tcp server failed, cur accpet socket exist, fd : {}", accept_socket_->fd());
@@ -72,7 +71,8 @@ NetState TcpServerImpl::init(int16_t port, int32_t thread_num) {
     return NetState::INTERNAL_ERR;
   }
 
-  GLOGD("TCP : server socket init success");
+  scheduler->regist_accept_socket(accept_socket_->fd(), handler_);
+  GLOGD("TCP : server init success");
 
   return NetState::SUCCESS;
 }
@@ -83,6 +83,7 @@ void TcpServerImpl::start() {
 }
 
 std::shared_ptr<TcpServer> TcpServer::create(const std::shared_ptr<EventHandler> & handler) {
+  INITLOGGER(spdlog::level::trace, "", true);
   auto internal_handler = handler;
   if (!internal_handler) {
     internal_handler = std::make_shared<TcpServerDefaultHandler>();

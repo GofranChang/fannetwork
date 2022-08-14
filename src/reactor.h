@@ -21,12 +21,9 @@ public:
   virtual ~Reactor();
 
 public:
-  virtual void register_event(int fd, EventCb* cb) = 0;
+  virtual void register_event(int fd, const std::shared_ptr<EventHandler>& handler) = 0;
 
-  virtual void register_ioevent(int fd,
-                                IOEventCb* read_cb,
-                                IOEventCb* write_cv,
-                                EventCb* error_cb) = 0;
+  virtual void register_ioevent(int fd, const std::shared_ptr<EventHandler>& handler) = 0;
 
   virtual void register_timer_event() = 0;
 

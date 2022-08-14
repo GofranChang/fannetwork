@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "common/logger.h"
+#include "event_handler.hpp"
 
 #include "event2/event.h"
 #include "event2/bufferevent.h"
@@ -48,20 +49,18 @@ public:
   }
 
 public:
-  virtual void register_event(int fd, EventCb* cb) override {
+  virtual void register_event(int fd, const std::shared_ptr<EventHandler>& handler) override {
     if (nullptr == evt_base_) {
       GLOGE("Register event error, event base is null, maybe internal error");
       return;
     }
 
-    event* evt = event_new(evt_base_, fd, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, this);
+    event* evt = event_new(evt_base_, fd, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, handler.get());
+    event_add(evt, nullptr);
     evts_.push(evt);
   }
 
-  virtual void register_ioevent(int fd,
-                                IOEventCb* read_cb,
-                                IOEventCb* write_cv,
-                                EventCb* error_cb) override {
+  virtual void register_ioevent(int fd, const std::shared_ptr<EventHandler>& handler) override {
   }
 
   virtual void register_timer_event() override {
@@ -83,11 +82,9 @@ public:
   virtual bool is_in_loop() const override { return run_tid_ == std::this_thread::get_id(); }
 
   static void event_cb(evutil_socket_t fd, short event, void* argc) {
-    ReactorImpl* reactor = static_cast<ReactorImpl*>(argc);
-    auto it = reactor->evt_cbs_.find(fd);
-    if (it != reactor->evt_cbs_.end()) {
-      if (it->second)
-        (*it->second)(fd, event);
+    EventHandler* handler = static_cast<EventHandler*>(argc);
+    if (handler) {
+      handler->on_event(fd, event);
     }
   }
 
