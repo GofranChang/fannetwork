@@ -1,3 +1,3 @@
 # fannetwork
 
-An C++11 tcp server library, base on libevent
+C++11 tcp server library, base on libevent
