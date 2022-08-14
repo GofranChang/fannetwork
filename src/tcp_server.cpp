@@ -4,24 +4,42 @@
 #include "net_state.hpp"
 #include "socket.h"
 #include "task_scheduler.h"
+#include "event_handler.h"
 
 namespace fannetwork {
 
+class TcpServerDefaultHandler : public EventHandler {
+public:
+  virtual void on_event(int fd, short event) override {}
+
+  virtual void on_ioevent(int fd, const char* data, size_t len) override {}
+
+  virtual void on_error(int fd, short event) override {}
+};
+
 class TcpServerImpl : public TcpServer {
 public:
-  virtual NetState init(int16_t port) override;
+  TcpServerImpl(const std::shared_ptr<EventHandler>& handler);
+
+  virtual NetState init(int16_t port, int32_t thread_num) override;
 
   virtual void start() override;
 
 private:
   std::shared_ptr<Socket> accept_socket_;
+
+  std::shared_ptr<EventHandler> handler_;
 };
 
-NetState TcpServerImpl::init(int16_t port) {
+TcpServerImpl::TcpServerImpl(const std::shared_ptr<EventHandler>& handler) :
+    handler_(handler) {
+}
+
+NetState TcpServerImpl::init(int16_t port, int32_t thread_num) {
   INITLOGGER(spdlog::level::trace, "", true);
 
   auto scheduler = TaskScheduler::instance();
-  scheduler->init(2);
+  scheduler->init(thread_num);
 
   if (accept_socket_) {
     GLOGE("Init tcp server failed, cur accpet socket exist, fd : {}", accept_socket_->fd());
@@ -64,8 +82,12 @@ void TcpServerImpl::start() {
   scheduler->run();
 }
 
-std::shared_ptr<TcpServer> TcpServer::create() {
-  auto p = new TcpServerImpl();
+std::shared_ptr<TcpServer> TcpServer::create(const std::shared_ptr<EventHandler> & handler) {
+  auto internal_handler = handler;
+  if (!internal_handler) {
+    internal_handler = std::make_shared<TcpServerDefaultHandler>();
+  }
+  auto p = new TcpServerImpl(internal_handler);
   return std::shared_ptr<TcpServer>(p);
 }
 

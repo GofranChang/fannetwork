@@ -2,12 +2,9 @@
 
 #include <memory>
 #include <functional>
+#include "task_scheduler.h"
 
 namespace fannetwork {
-
-using EventCb = std::function<void(int, short)>;
-
-using IOEventCb = std::function<void(int, std::string)>;
 
 class ReactorImpl;
 

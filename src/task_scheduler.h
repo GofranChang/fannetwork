@@ -5,7 +5,13 @@
 
 class ThreadPool;
 
+class EventHandler;
+
 namespace fannetwork {
+
+using EventCb = std::function<void(int, short)>;
+
+using IOEventCb = std::function<void(int, std::string)>;
 
 class Reactor;
 
@@ -33,13 +39,15 @@ public:
 public:
   NetState init(size_t thread_nums);
 
+  NetState regist_accept_socket(int fd, std::shared_ptr<EventHandler> handler);
+
   void run();
 
 private:
 
 
 private:
-  std::shared_ptr<Reactor> accept_reactor_;
+  std::shared_ptr<Reactor> main_reactor_;
 
   std::shared_ptr<Reactor> connection_reactor_;
 

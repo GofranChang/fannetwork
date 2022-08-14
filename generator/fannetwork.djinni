@@ -9,8 +9,13 @@ net_state = enum {
     MULTI_INIT;
 }
 
+event_handler = interface +c {
+    on_event(fd:i32, evt:i16);
+    on_read(fd:i32, msg:binary);
+}
+
 tcp_server = interface +c {
-    static create():tcp_server;
-    init(port:i16):net_state;
+    static create(handler:event_handler):tcp_server;
+    init(port:i16, thread_num:i32):net_state;
     start();
 }
