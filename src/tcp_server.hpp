@@ -20,7 +20,10 @@ class FANNETWORK_PUBLIC TcpServer : public EventTarget {
 public:
   friend class DefaultAcceptHandler;
 
-  TcpServer(const std::shared_ptr<EventHandler>& handler);
+public:
+  TcpServer();
+
+  explicit TcpServer(const std::shared_ptr<EventHandler>& handler);
 
   virtual ~TcpServer() {}
 

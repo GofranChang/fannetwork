@@ -28,8 +28,12 @@ void DefaultAcceptHandler::on_event(int32_t fd, int16_t evt) {
 void DefaultAcceptHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
 }
 
-TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler) :
-    EventTarget(handler) {
+TcpServer::TcpServer() : EventTarget(std::make_shared<DefaultAcceptHandler>()) {
+  auto handler = static_cast<DefaultAcceptHandler*>(handler_.get());
+  handler->set_server(this);
+}
+
+TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler) : EventTarget(handler) {
 }
 
 NetState TcpServer::init(int16_t port, int32_t thread_num) {
