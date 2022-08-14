@@ -89,6 +89,7 @@ public:
   }
 
   static void wakeup_cb(evutil_socket_t fd, short event, void* argc) {
+    GLOGE("wakeup_cb");
   }
 
 private:

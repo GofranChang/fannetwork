@@ -9,48 +9,11 @@
 
 namespace fannetwork {
 
-class TcpServerImpl;
-
-class DefaultAcceptHandler : public EventHandler {
-public:
-  DefaultAcceptHandler();
-
-public:
-  void set_server(TcpServerImpl* srv);
-
-  virtual void on_event(int32_t fd, int16_t evt) override;
-
-  virtual void on_read(int32_t fd, const std::vector<uint8_t> & msg) override;
-
-private:
-  TcpServerImpl* server_;
-};
-
-class TcpServerImpl : public TcpServer {
-public:
-  friend class DefaultAcceptHandler;
-
-  explicit TcpServerImpl(const std::shared_ptr<EventHandler>& handler);
-
-  virtual NetState init(int16_t port, int32_t thread_num) override;
-
-  virtual void start() override;
-
-private:
-  NetState on_connect(int fd);
-
-private:
-  std::shared_ptr<Socket> accept_socket_;
-
-  std::shared_ptr<EventHandler> handler_;
-
-  std::vector<std::shared_ptr<TcpConnection>> connetions_;
-};
-
 DefaultAcceptHandler::DefaultAcceptHandler() : server_(nullptr) {
+  INITLOGGER(spdlog::level::trace, "", true);
 }
 
-void DefaultAcceptHandler::set_server(TcpServerImpl* srv) {
+void DefaultAcceptHandler::set_server(TcpServer* srv) {
   if (server_ != nullptr)
     return;
 
@@ -65,11 +28,11 @@ void DefaultAcceptHandler::on_event(int32_t fd, int16_t evt) {
 void DefaultAcceptHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
 }
 
-TcpServerImpl::TcpServerImpl(const std::shared_ptr<EventHandler>& handler) :
-    handler_(handler) {
+TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler) :
+    EventTarget(handler) {
 }
 
-NetState TcpServerImpl::init(int16_t port, int32_t thread_num) {
+NetState TcpServer::init(int16_t port, int32_t thread_num) {
   auto scheduler = TaskScheduler::instance();
   scheduler->init(thread_num, {});
 
@@ -110,12 +73,12 @@ NetState TcpServerImpl::init(int16_t port, int32_t thread_num) {
   return NetState::SUCCESS;
 }
 
-void TcpServerImpl::start() {
+void TcpServer::start() {
   auto scheduler = TaskScheduler::instance();
   scheduler->run();
 }
 
-NetState TcpServerImpl::on_connect(int fd) {
+NetState TcpServer::on_connect(int fd) {
   if (fd != accept_socket_->fd()) {
     GLOGE("Connect failed, cur fd {}, incoming fd {}", accept_socket_->fd(), fd);
     return NetState::INTERNAL_ERR;
@@ -128,18 +91,18 @@ NetState TcpServerImpl::on_connect(int fd) {
   return NetState::SUCCESS;
 }
 
-std::shared_ptr<TcpServer> TcpServer::create(const std::shared_ptr<EventHandler> & handler) {
-  INITLOGGER(spdlog::level::trace, "", true);
-  TcpServerImpl* p = nullptr;
-  if (handler) {
-    p = new TcpServerImpl(handler);
-  } else {
-    std::shared_ptr<DefaultAcceptHandler> h(new DefaultAcceptHandler());
-    p = new TcpServerImpl(h);
-    h->set_server(p);
-  }
+// std::shared_ptr<TcpServer> TcpServer::create(const std::shared_ptr<EventHandler> & handler) {
+//   INITLOGGER(spdlog::level::trace, "", true);
+//   TcpServer* p = nullptr;
+//   if (handler) {
+//     p = new TcpServer(handler);
+//   } else {
+//     std::shared_ptr<DefaultAcceptHandler> h(new DefaultAcceptHandler());
+//     p = new TcpServer(h);
+//     h->set_server(p);
+//   }
 
-  return std::shared_ptr<TcpServer>(p);
-}
+//   return std::shared_ptr<TcpServer>(p);
+// }
 
 }

@@ -11,24 +11,24 @@
 #if defined _WIN32 || defined __CYGWIN__
 #ifdef BUILDING_DLL
 #ifdef __GNUC__
-#define GORTSP_PUBLIC __attribute__((dllexport))
+#define FANNETWORK_PUBLIC __attribute__((dllexport))
 #else // ifdef __GNUC__
-#define GORTSP_PUBLIC __declspec(dllexport)
+#define FANNETWORK_PUBLIC __declspec(dllexport)
 #endif // ifdef __GNUC__
 #else // ifdef BUILDING_DLL
 #ifdef __GNUC__
-#define GORTSP_PUBLIC __attribute__((dllimport))
+#define FANNETWORK_PUBLIC __attribute__((dllimport))
 #else // ifdef __GNUC__
-#define GORTSP_PUBLIC __declspec(dllimport)
+#define FANNETWORK_PUBLIC __declspec(dllimport)
 #endif // ifdef __GNUC__
 #endif // ifdef BUILDING_DLL
-#define GORTSP_LOCAL
+#define FANNETWORK_LOCAL
 #else // if defined _WIN32 || defined __CYGWIN__
 #if __GNUC__ >= 4
-#define GORTSP_PUBLIC __attribute__((visibility("default")))
-#define GORTSP_LOCAL __attribute__((visibility("hidden")))
+#define FANNETWORK_PUBLIC __attribute__((visibility("default")))
+#define FANNETWORK_LOCAL __attribute__((visibility("hidden")))
 #else // if __GNUC__ >= 4
-#define GORTSP_PUBLIC
-#define GORTSP_LOCAL
+#define FANNETWORK_PUBLIC
+#define FANNETWORK_LOCAL
 #endif // if __GNUC__ >= 4
 #endif // if defined _WIN32 || defined __CYGWIN__

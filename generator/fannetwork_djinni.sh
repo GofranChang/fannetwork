@@ -32,5 +32,5 @@ $current_dir/deps/djinni/bin/djinni \
     --cpp-out $cpp_out \
     --cpp-namespace $namespace \
     --idl $djinni_file \
-    --cpp-export-define GORTSP_PUBLIC \
+    --cpp-export-define FANNETWORK_PUBLIC \
     --cpp-export-define-header \"common/GORTSP_API.h\"

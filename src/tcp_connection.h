@@ -25,6 +25,10 @@ public:
 public:
   NetState set_conneted_socket(const std::shared_ptr<Socket>& socket);
 
+  NetState read(std::string& content);
+
+  NetState write(const std::string& content);
+
   void disconnect();
 
   inline bool is_connected() const { return connecting_; }
