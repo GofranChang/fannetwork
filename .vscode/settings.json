@@ -74,6 +74,7 @@
         "condition_variable": "cpp",
         "deque": "cpp",
         "future": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "__functional_base_03": "cpp"
     }
 }

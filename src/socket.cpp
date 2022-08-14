@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 
 #include "common/logger.h"
+#include "tcp_connection.h"
 
 namespace fannetwork {
 
@@ -32,7 +33,7 @@ Socket::Socket(SocketType type) :
 Socket::Socket(int fd) :
     type_(SocketType::TCP_SOCKET),
     fd_(fd),
-    status_(SocketStat::UNINITIALIZED),
+    status_(SocketStat::CONNETED),
     connected_(false) {
 }
 
@@ -138,7 +139,7 @@ NetState Socket::listen(int backlog) {
   return NetState::SUCCESS;
 }
 
-NetState Socket::accept(std::shared_ptr<Socket>& clisock) {
+NetState Socket::accept(std::shared_ptr<TcpConnection>& connection) {
   if (type_ != SocketType::TCP_SOCKET || status_ != SocketStat::LISTENING) {
     GLOGE("Listen failed, socket type {}, cur status {}", type_, status_);
     return NetState::ILLEGAL_PARAMS;
@@ -147,9 +148,11 @@ NetState Socket::accept(std::shared_ptr<Socket>& clisock) {
   struct sockaddr_in addr = { 0 };
   socklen_t addrlen = sizeof(struct sockaddr_in);
 
-  GLOGT("Start accept, local fd {}", fd_);
   int fd = ::accept(fd_, (struct sockaddr*)&addr, &addrlen);
-  clisock = Socket::create_from_accept(fd);
+  auto clisock = Socket::create_from_accept(fd);
+
+  connection = TcpConnection::create(clisock);
+  GLOGT("Start accept, local fd {}, accepted fd {}", fd_, clisock->fd());
 
   return NetState::SUCCESS;
 }
@@ -157,7 +160,7 @@ NetState Socket::accept(std::shared_ptr<Socket>& clisock) {
 NetState Socket::connect(const std::string& ip,
                          uint16_t port,
                          int timeout,
-                         std::shared_ptr<Socket>& srvsock) {
+                         std::shared_ptr<TcpConnection>& connection) {
 #if 0
   if (type_ != SocketType::TCP_SOCKET || status_ != SocketStat::BINDED) {
     GLOGE("Connect failed, socket type {}, cur status {}", type_, status_);

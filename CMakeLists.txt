@@ -11,6 +11,8 @@ set(TASK_SRC
   src/task_scheduler.h
   src/task_scheduler.cpp
   src/tcp_server.cpp
+  src/tcp_connection.h
+  src/tcp_connection.cpp
 )
 
 add_subdirectory(third_party/libevent libevent.out EXCLUDE_FROM_ALL)

@@ -7,6 +7,8 @@
 
 namespace fannetwork {
 
+class TcpConnection;
+
 class Socket {
 public:
   enum class SocketType : int {
@@ -46,12 +48,12 @@ public:
 
   NetState listen(int backlog);
 
-  NetState accept(std::shared_ptr<Socket>& clisock);
+  NetState accept(std::shared_ptr<TcpConnection>& connection);
 
   NetState connect(const std::string& ip,
                    uint16_t port,
                    int timeout,
-                   std::shared_ptr<Socket>& srvsock);
+                   std::shared_ptr<TcpConnection>& connection);
 
   NetState disconnect();
 
