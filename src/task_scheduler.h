@@ -47,16 +47,9 @@ public:
   void run();
 
 private:
-
-
-private:
   std::shared_ptr<Reactor> main_reactor_;
 
   std::map<std::string, std::shared_ptr<Reactor>> sub_reactors_;
-
-  // std::shared_ptr<Reactor> connection_reactor_;
-
-  // std::shared_ptr<Reactor> task_reactor_;
 
   std::unique_ptr<ThreadPool> thread_pool_;
 };
