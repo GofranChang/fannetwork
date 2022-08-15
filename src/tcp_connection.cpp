@@ -1,4 +1,4 @@
-#include "tcp_connection.h"
+#include "tcp_connection.hpp"
 
 #include "socket.h"
 #include "common/logger.h"
@@ -47,6 +47,18 @@ void TcpConnection::disconnect() {
     socket_.reset();
 
   connecting_ = false;
+}
+
+DefaultTcpConnectionHandler::DefaultTcpConnectionHandler() {}
+
+void DefaultTcpConnectionHandler::set_connection(TcpConnection* srv) {
+  connection_ = srv;
+}
+
+void DefaultTcpConnectionHandler::on_event(int32_t fd, int16_t evt) {}
+
+void DefaultTcpConnectionHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
+  // GLOGE("On read : {}", msg);
 }
 
 }

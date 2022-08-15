@@ -1,4 +1,4 @@
-#include "task_scheduler.h"
+#include "task_scheduler.hpp"
 
 #include "common/logger.h"
 #include "common/thread_pool.hpp"
@@ -43,7 +43,7 @@ NetState TaskScheduler::init(size_t thread_nums, const std::vector<std::string>&
   return NetState::SUCCESS;
 }
 
-NetState TaskScheduler::regist_accept_socket(int fd, const std::shared_ptr<EventHandler>& handler) {
+NetState TaskScheduler::regist_main_event(int fd, const std::shared_ptr<EventHandler>& handler) {
   if (!main_reactor_ ) {
     GLOGE("Run task scheduler loop failed, main reactor is null");
     return NetState::UNINITIALIZED;
@@ -52,6 +52,11 @@ NetState TaskScheduler::regist_accept_socket(int fd, const std::shared_ptr<Event
   GLOGT("Regist main reactor, fd {}", fd);
   main_reactor_->register_event(fd, handler);
   return NetState::SUCCESS;
+}
+
+NetState TaskScheduler::regist_sub_event(const std::string& reactor_name,
+                                         int fd,
+                                         const std::shared_ptr<EventHandler>& handler) {
 }
 
 void TaskScheduler::run() {

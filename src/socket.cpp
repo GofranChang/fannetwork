@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 
 #include "common/logger.h"
-#include "tcp_connection.h"
+#include "tcp_connection.hpp"
 
 namespace fannetwork {
 

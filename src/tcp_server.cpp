@@ -3,9 +3,9 @@
 #include "common/logger.h"
 #include "net_state.hpp"
 #include "socket.h"
-#include "task_scheduler.h"
+#include "task_scheduler.hpp"
 #include "event_handler.hpp"
-#include "tcp_connection.h"
+#include "tcp_connection.hpp"
 
 namespace fannetwork {
 
@@ -82,7 +82,7 @@ NetState TcpServer::init(int16_t port, int32_t thread_num) {
     return NetState::INTERNAL_ERR;
   }
 
-  scheduler->regist_accept_socket(accept_socket_->fd(), handler_);
+  scheduler->regist_main_event(accept_socket_->fd(), handler_);
   GLOGD("TCP : server init success");
 
   return NetState::SUCCESS;
@@ -101,6 +101,12 @@ NetState TcpServer::on_connect(int fd) {
 
   auto conn = std::shared_ptr<TcpConnection>(nullptr);
   accept_socket_->accept(conn);
+
+  if (connect_handler_factory_) {
+    conn->set_handler(connect_handler_factory_());
+  } else {
+    conn->set_handler(std::make_shared<DefaultTcpConnectionHandler>());
+  }
   connetions_.push_back(conn);
 
   return NetState::SUCCESS;

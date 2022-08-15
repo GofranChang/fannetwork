@@ -3,12 +3,14 @@
 #include "net_state.hpp"
 
 #include <memory>
+#include "event_handler.hpp"
+#include "event_target.hpp"
 
 namespace fannetwork {
 
 class Socket;
 
-class TcpConnection {
+class TcpConnection : public EventTarget {
 public:
   static std::shared_ptr<TcpConnection> create();
 
@@ -37,6 +39,21 @@ private:
   std::shared_ptr<Socket> socket_;
 
   bool connecting_;
+};
+
+class DefaultTcpConnectionHandler : public EventHandler {
+public:
+  DefaultTcpConnectionHandler();
+
+public:
+  void set_connection(TcpConnection* srv);
+
+  virtual void on_event(int32_t fd, int16_t evt) override;
+
+  virtual void on_read(int32_t fd, const std::vector<uint8_t> & msg) override;
+
+private:
+  TcpConnection* connection_;
 };
 
 }
