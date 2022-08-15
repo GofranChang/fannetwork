@@ -3,6 +3,7 @@
 #include "common/GORTSP_API.h"
 #include <cstdint>
 #include <memory>
+#include <functional>
 
 #include "net_state.hpp"
 #include "event_handler.hpp"
@@ -25,6 +26,10 @@ public:
 
   explicit TcpServer(const std::shared_ptr<EventHandler>& handler);
 
+  explicit TcpServer(EventHandlerFactory& connection_handler_factory);
+
+  TcpServer(const std::shared_ptr<EventHandler>& handler, EventHandlerFactory& connection_handler_factory);
+
   virtual ~TcpServer() {}
 
   virtual NetState init(int16_t port, int32_t thread_num);
@@ -38,6 +43,8 @@ private:
   std::shared_ptr<Socket> accept_socket_;
 
   std::vector<std::shared_ptr<TcpConnection>> connetions_;
+
+  EventHandlerFactory connect_handler_factory_;
 };
 
 class FANNETWORK_PUBLIC DefaultAcceptHandler : public EventHandler {

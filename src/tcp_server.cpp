@@ -28,12 +28,23 @@ void DefaultAcceptHandler::on_event(int32_t fd, int16_t evt) {
 void DefaultAcceptHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
 }
 
-TcpServer::TcpServer() : EventTarget(std::make_shared<DefaultAcceptHandler>()) {
+TcpServer::TcpServer() : EventTarget(std::make_shared<DefaultAcceptHandler>()),
+                         connect_handler_factory_(nullptr) {
   auto handler = static_cast<DefaultAcceptHandler*>(handler_.get());
   handler->set_server(this);
 }
 
-TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler) : EventTarget(handler) {
+TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler) : EventTarget(handler),
+                                                                     connect_handler_factory_(nullptr) {
+}
+
+TcpServer::TcpServer(EventHandlerFactory& connection_handler_factory) : EventTarget(std::make_shared<DefaultAcceptHandler>()),
+                                                                        connect_handler_factory_(nullptr) {
+}
+
+TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler,
+                     EventHandlerFactory& connection_handler_factory) : EventTarget(handler),
+                                                                        connect_handler_factory_(connection_handler_factory) {
 }
 
 NetState TcpServer::init(int16_t port, int32_t thread_num) {
@@ -94,19 +105,5 @@ NetState TcpServer::on_connect(int fd) {
 
   return NetState::SUCCESS;
 }
-
-// std::shared_ptr<TcpServer> TcpServer::create(const std::shared_ptr<EventHandler> & handler) {
-//   INITLOGGER(spdlog::level::trace, "", true);
-//   TcpServer* p = nullptr;
-//   if (handler) {
-//     p = new TcpServer(handler);
-//   } else {
-//     std::shared_ptr<DefaultAcceptHandler> h(new DefaultAcceptHandler());
-//     p = new TcpServer(h);
-//     h->set_server(p);
-//   }
-
-//   return std::shared_ptr<TcpServer>(p);
-// }
 
 }

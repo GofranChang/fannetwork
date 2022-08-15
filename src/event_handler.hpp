@@ -6,6 +6,10 @@
 
 namespace fannetwork {
 
+class EventHandler;
+
+using EventHandlerFactory = std::function<std::shared_ptr<EventHandler>()>;
+
 class FANNETWORK_PUBLIC EventHandler {
 public:
   virtual ~EventHandler() {}
