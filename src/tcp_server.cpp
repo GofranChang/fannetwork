@@ -49,7 +49,7 @@ TcpServer::TcpServer(const std::shared_ptr<EventHandler>& handler,
 
 NetState TcpServer::init(int16_t port, int32_t thread_num) {
   auto scheduler = TaskScheduler::instance();
-  scheduler->init(thread_num, {});
+  scheduler->init(thread_num, {"connection"});
 
   if (accept_socket_) {
     GLOGE("Init tcp server failed, cur accpet socket exist, fd : {}", accept_socket_->fd());
@@ -82,7 +82,7 @@ NetState TcpServer::init(int16_t port, int32_t thread_num) {
     return NetState::INTERNAL_ERR;
   }
 
-  scheduler->regist_main_event(accept_socket_->fd(), handler_);
+  scheduler->register_main_event(accept_socket_->fd(), handler_);
   GLOGD("TCP : server init success");
 
   return NetState::SUCCESS;
@@ -102,12 +102,18 @@ NetState TcpServer::on_connect(int fd) {
   auto conn = std::shared_ptr<TcpConnection>(nullptr);
   accept_socket_->accept(conn);
 
+  std::shared_ptr<EventHandler> connect_handler(nullptr);
   if (connect_handler_factory_) {
-    conn->set_handler(connect_handler_factory_());
+    connect_handler = connect_handler_factory_();
   } else {
-    conn->set_handler(std::make_shared<DefaultTcpConnectionHandler>());
+    connect_handler = std::make_shared<DefaultTcpConnectionHandler>();
   }
+
+  conn->set_handler(connect_handler);
   connetions_.push_back(conn);
+
+  auto scheduler = TaskScheduler::instance();
+  scheduler->register_sub_event("connection", conn->fd(), connect_handler);
 
   return NetState::SUCCESS;
 }

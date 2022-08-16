@@ -23,18 +23,21 @@ NetState TaskScheduler::init(size_t thread_nums, const std::vector<std::string>&
 
   main_reactor_ = Reactor::create();
 
-  auto start_reactor = [](const std::shared_ptr<Reactor>& reactor) {
-    if (!reactor) {
+  auto start_reactor = [this](const std::string& reactor_name) {
+    if ("" == reactor_name) {
       GLOGE("Create reactor failed, already created");
       return;
     }
+    auto reactor = Reactor::create();
+    // TODO: Add mutex
+    this->sub_reactors_.insert(std::make_pair(reactor_name, reactor));
     reactor->start();
   };
 
-  for (auto reactor : sub_reactor_name) {
-    auto cur_reactor = Reactor::create();
-    sub_reactors_.insert(std::make_pair(reactor, cur_reactor));
-    thread_pool_->enqueue(start_reactor, cur_reactor);
+  for (auto name : sub_reactor_name) {
+    // auto cur_reactor = Reactor::create();
+    // sub_reactors_.insert(std::make_pair(reactor, cur_reactor));
+    thread_pool_->enqueue(start_reactor, name);
   }
 
   // thread_pool_->enqueue(start_reactor, connection_reactor_);
@@ -43,7 +46,7 @@ NetState TaskScheduler::init(size_t thread_nums, const std::vector<std::string>&
   return NetState::SUCCESS;
 }
 
-NetState TaskScheduler::regist_main_event(int fd, const std::shared_ptr<EventHandler>& handler) {
+NetState TaskScheduler::register_main_event(int fd, const std::shared_ptr<EventHandler>& handler) {
   if (!main_reactor_ ) {
     GLOGE("Run task scheduler loop failed, main reactor is null");
     return NetState::UNINITIALIZED;
@@ -54,9 +57,18 @@ NetState TaskScheduler::regist_main_event(int fd, const std::shared_ptr<EventHan
   return NetState::SUCCESS;
 }
 
-NetState TaskScheduler::regist_sub_event(const std::string& reactor_name,
+NetState TaskScheduler::register_sub_event(const std::string& reactor_name,
                                          int fd,
                                          const std::shared_ptr<EventHandler>& handler) {
+  auto it = sub_reactors_.find(reactor_name);
+
+  if (it == sub_reactors_.end()) {
+    GLOGE("Couldn't found reactor {}", reactor_name);
+    return NetState::UNINITIALIZED;
+  }
+
+  it->second->register_ioevent(fd, handler);
+  return NetState::SUCCESS;
 }
 
 void TaskScheduler::run() {

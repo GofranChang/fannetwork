@@ -42,9 +42,9 @@ public:
 public:
   NetState init(size_t thread_nums, const std::vector<std::string>& sub_reactor_name);
 
-  NetState regist_main_event(int fd, const std::shared_ptr<EventHandler>& handler);
+  NetState register_main_event(int fd, const std::shared_ptr<EventHandler>& handler);
 
-  NetState regist_sub_event(const std::string& reactor_name,
+  NetState register_sub_event(const std::string& reactor_name,
                             int fd,
                             const std::shared_ptr<EventHandler>& handler);
 

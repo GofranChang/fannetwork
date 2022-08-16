@@ -49,6 +49,10 @@ void TcpConnection::disconnect() {
   connecting_ = false;
 }
 
+int TcpConnection::fd() {
+  return socket_ ? socket_->fd() : -1;
+}
+
 DefaultTcpConnectionHandler::DefaultTcpConnectionHandler() {}
 
 void DefaultTcpConnectionHandler::set_connection(TcpConnection* srv) {

@@ -35,6 +35,8 @@ public:
 
   inline bool is_connected() const { return connecting_; }
 
+  int fd();
+
 private:
   std::shared_ptr<Socket> socket_;
 

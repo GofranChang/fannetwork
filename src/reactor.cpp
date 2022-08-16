@@ -3,6 +3,7 @@
 #include <map>
 #include <queue>
 #include <thread>
+#include <mutex>
 
 #include "common/logger.h"
 #include "event_handler.hpp"
@@ -12,6 +13,11 @@
 #include "event2/buffer.h"
 
 namespace fannetwork {
+
+struct EventMsg {
+  int fd_;
+  std::shared_ptr<EventHandler> handler_;
+};
 
 class ReactorImpl : public Reactor {
 public:
@@ -50,17 +56,25 @@ public:
 
 public:
   virtual void register_event(int fd, const std::shared_ptr<EventHandler>& handler) override {
-    if (nullptr == evt_base_) {
-      GLOGE("Register event error, event base is null, maybe internal error");
-      return;
+    if (std::this_thread::get_id() == run_tid_) {
+      register_event({fd, handler});
+    } else {
+      std::lock_guard<std::mutex> lck(eventmsg_mutex_);
+      event_msgs_.push({fd, handler});
+      this->wake_up();
     }
-
-    event* evt = event_new(evt_base_, fd, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, handler.get());
-    event_add(evt, nullptr);
-    evts_.push(evt);
   }
 
   virtual void register_ioevent(int fd, const std::shared_ptr<EventHandler>& handler) override {
+    if (std::this_thread::get_id() == run_tid_) {
+      GLOGE("1111")
+      register_ioevent({fd, handler});
+    } else {
+      GLOGE("2222")
+      std::lock_guard<std::mutex> lck(eventmsg_mutex_);
+      ioevent_msgs_.push({fd, handler});
+      this->wake_up();
+    }
   }
 
   virtual void register_timer_event() override {
@@ -90,6 +104,41 @@ public:
 
   static void wakeup_cb(evutil_socket_t fd, short event, void* argc) {
     GLOGE("wakeup_cb");
+    ReactorImpl* reactor = static_cast<ReactorImpl*>(argc);
+
+    {
+      std::lock_guard<std::mutex> lck(reactor->eventmsg_mutex_);
+      while (!reactor->ioevent_msgs_.empty()) {
+        auto msg = reactor->ioevent_msgs_.front();
+        // TODO: regist buffer event
+      }
+      // event_msgs_.push({fd, handler});
+      // this->wake_up();
+    }
+  }
+
+private:
+  void register_event(const EventMsg& msg) {
+    if (nullptr == evt_base_) {
+      GLOGE("Register event error, event base is null, maybe internal error");
+      return;
+    }
+
+    event* evt = event_new(evt_base_, msg.fd_, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, msg.handler_.get());
+    event_add(evt, nullptr);
+    evts_.push(evt);
+  }
+
+  void register_ioevent(const EventMsg& msg) {
+    if (nullptr == evt_base_) {
+      GLOGE("Register event error, event base is null, maybe internal error");
+      return;
+    }
+
+    GLOGE("On ioevent");
+    // event* evt = event_new(evt_base_, msg.fd_, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, msg.handler_.get());
+    // event_add(evt, nullptr);
+    // evts_.push(evt);
   }
 
 private:
@@ -104,6 +153,12 @@ private:
   int wakeup_pipe_[2];
 
   event* wakeup_event_;
+
+  std::queue<EventMsg> event_msgs_;
+
+  std::queue<EventMsg> ioevent_msgs_;
+
+  std::mutex eventmsg_mutex_;
 };
 
 std::shared_ptr<Reactor> Reactor::create() {
