@@ -61,8 +61,8 @@ void DefaultTcpConnectionHandler::set_connection(TcpConnection* srv) {
 
 void DefaultTcpConnectionHandler::on_event(int32_t fd, int16_t evt) {}
 
-void DefaultTcpConnectionHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
-  // GLOGE("On read : {}", msg);
+void DefaultTcpConnectionHandler::on_read(int32_t fd, const std::string & msg) {
+  GLOGT("On read : {}", msg);
 }
 
 }

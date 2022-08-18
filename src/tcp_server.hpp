@@ -56,7 +56,7 @@ public:
 
   virtual void on_event(int32_t fd, int16_t evt) override;
 
-  virtual void on_read(int32_t fd, const std::vector<uint8_t> & msg) override;
+  virtual void on_read(int32_t fd, const std::string & msg) override;
 
 private:
   TcpServer* server_;

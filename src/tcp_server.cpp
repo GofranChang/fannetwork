@@ -25,7 +25,7 @@ void DefaultAcceptHandler::on_event(int32_t fd, int16_t evt) {
     server_->on_connect(fd);
 }
 
-void DefaultAcceptHandler::on_read(int32_t fd, const std::vector<uint8_t> & msg) {
+void DefaultAcceptHandler::on_read(int32_t fd, const std::string & msg) {
 }
 
 TcpServer::TcpServer() : EventTarget(std::make_shared<DefaultAcceptHandler>()),

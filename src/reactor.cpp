@@ -67,10 +67,8 @@ public:
 
   virtual void register_ioevent(int fd, const std::shared_ptr<EventHandler>& handler) override {
     if (std::this_thread::get_id() == run_tid_) {
-      GLOGE("1111")
       register_ioevent({fd, handler});
     } else {
-      GLOGE("2222")
       std::lock_guard<std::mutex> lck(eventmsg_mutex_);
       ioevent_msgs_.push({fd, handler});
       this->wake_up();
@@ -90,7 +88,7 @@ public:
   }
 
   virtual void wake_up() override {
-    ::write(wakeup_pipe_[1], "1", 1);
+    ::write(wakeup_pipe_[1], "w", 1);
   }
 
   virtual bool is_in_loop() const override { return run_tid_ == std::this_thread::get_id(); }
@@ -102,15 +100,40 @@ public:
     }
   }
 
+  static void read_cb(struct bufferevent *bev, void *ctx) {
+    size_t read_len = evbuffer_get_length(bufferevent_get_input(bev));
+
+#if 1
+    std::string read_buffer(read_len, 0);
+    bufferevent_read(bev, const_cast<char*>(read_buffer.c_str()), read_len);
+
+    // GLOGT("Read buffer:\n{}", read_buffer);
+
+    EventHandler* handler = static_cast<EventHandler*>(ctx);
+    handler->on_read(bufferevent_getfd(bev), read_buffer);
+#endif
+
+#if 0
+    auto ebf = bufferevent_get_input(bev);
+    auto buffer = (char *)evbuffer_pullup(ebf, -1);
+#endif
+  }
+
+  static void error_cb(struct bufferevent *bev, short what, void *ctx) {
+  }
+
   static void wakeup_cb(evutil_socket_t fd, short event, void* argc) {
-    GLOGE("wakeup_cb");
     ReactorImpl* reactor = static_cast<ReactorImpl*>(argc);
+    char c[1];
+    ::read(reactor->wakeup_pipe_[0], c, 1);
+    GLOGT("wakeup_cb flag {}", c);
 
     {
       std::lock_guard<std::mutex> lck(reactor->eventmsg_mutex_);
       while (!reactor->ioevent_msgs_.empty()) {
         auto msg = reactor->ioevent_msgs_.front();
-        // TODO: regist buffer event
+        reactor->register_ioevent(msg);
+        reactor->ioevent_msgs_.pop();
       }
       // event_msgs_.push({fd, handler});
       // this->wake_up();
@@ -136,9 +159,10 @@ private:
     }
 
     GLOGE("On ioevent");
-    // event* evt = event_new(evt_base_, msg.fd_, EV_TIMEOUT | EV_READ | EV_PERSIST, event_cb, msg.handler_.get());
-    // event_add(evt, nullptr);
-    // evts_.push(evt);
+    bufferevent* bev = bufferevent_socket_new(evt_base_, msg.fd_, BEV_OPT_CLOSE_ON_FREE);
+    bufferevent_setcb(bev, read_cb, nullptr, error_cb, msg.handler_.get());
+    bufferevent_enable(bev, EV_READ | EV_WRITE | EV_PERSIST);
+    bufferevent_setwatermark(bev, EV_READ, 0, 0);
   }
 
 private:

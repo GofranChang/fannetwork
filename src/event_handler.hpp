@@ -16,7 +16,7 @@ public:
 
   virtual void on_event(int32_t fd, int16_t evt) = 0;
 
-  virtual void on_read(int32_t fd, const std::vector<uint8_t> & msg) = 0;
+  virtual void on_read(int32_t fd, const std::string & msg) = 0;
 };
 
 }  // namespace fannetwork

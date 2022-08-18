@@ -34,6 +34,8 @@ int main(int argc, const char* argv[]) {
     }
     std::cout << __LINE__ << std::endl;
 
+    send(client_fd, "Hell", strlen("Hell"), 0);
+
     char buf[1024];
     int len = recv(client_fd, buf, 1024, 0); //等待接收服务器端的数据
     buf[len] = '\0';
